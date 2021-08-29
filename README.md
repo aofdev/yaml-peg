@@ -17,6 +17,7 @@ cargo run -- --file example_files/test.yaml
 ## TODO
 
 - [x] One level
+- [ ] String multiline
 - [ ] Nested levels
 - [ ] YAML 1.2
 - [ ] Change binary to library
