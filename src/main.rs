@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     let dir = current_dir().unwrap().join(file);
     let filepath = dir.to_str().unwrap();
     let unparsed_file =
-        fs::read_to_string(filepath).expect(format!("Can't read file: {}", filepath).as_str());
+        fs::read_to_string(filepath).unwrap_or_else(|_| panic!("Can't read file: {}", filepath));
 
     match parse(&unparsed_file) {
         Ok(parsed_file) => println!("{:?}", parsed_file),
