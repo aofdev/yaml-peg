@@ -1,0 +1,30 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+pair = _{ string_key ~ ":" ~ value }
+pair_nested = { (pair)* }
+value = _{ array | array_multiline | string | number | boolean | null | pair_nested }
+
+array = {
+    "[" ~ "]" |
+    "[" ~ value ~ ("," ~ value)* ~ "]"
+}
+array_multiline = { ("-" ~ (!("-" | pair) ~ string_key))+ }
+boolean = { "true" | "false" }
+char_key = { ASCII_ALPHANUMERIC | "." | "_" | "/" | "-" }
+string_key = @{ char_key+ }
+null = { "null" }
+string = ${ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+number = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+
+mapping = { SOI ~ pair* ~ EOI }
