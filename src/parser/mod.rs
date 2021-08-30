@@ -33,9 +33,25 @@ fn query_string_from_pair(pair: Pair<Rule>) -> String {
     pair.into_inner().as_str().to_string()
 }
 
+fn query_string_multiline_folded_style_from_pair(pair: Pair<Rule>) -> String {
+    format!(
+        "{}{}",
+        pair.as_str().replace(">\n", "").replace("\n", ""),
+        "\n"
+    )
+}
+
+fn query_string_multiline_literal_style_from_pair(pair: Pair<Rule>) -> String {
+    format!("{}{}", pair.as_str().replace("|\n", ""), "\n")
+}
+
 fn query_from_pair(pair: Pair<Rule>) -> String {
     match pair.as_rule() {
         Rule::string => query_string_from_pair(pair),
+        Rule::string_multiline_folded_style => query_string_multiline_folded_style_from_pair(pair),
+        Rule::string_multiline_literal_style => {
+            query_string_multiline_literal_style_from_pair(pair)
+        }
         Rule::number => pair.as_str().to_string(),
         Rule::boolean => pair.as_str().to_string(),
         Rule::array => format!("{:?}", query_array_from_pair(pair)),
@@ -60,7 +76,13 @@ fn statement_from_pairs(pairs: Pair<Rule>) -> HashMap<String, String> {
                     .or_default()
                     .to_string();
             }
-            Rule::string | Rule::number | Rule::boolean | Rule::array | Rule::array_multiline => {
+            Rule::string
+            | Rule::string_multiline_folded_style
+            | Rule::string_multiline_literal_style
+            | Rule::number
+            | Rule::boolean
+            | Rule::array
+            | Rule::array_multiline => {
                 properties.insert(current_key.clone(), query_from_pair(pair));
             }
             Rule::EOI => (),
@@ -98,23 +120,30 @@ mod tests {
     #[test]
     fn test_parse() {
         let input = r###"
-            doe: "a deer, a female deer"
-            ray: "a drop of golden sun"
-            pi: 3.14159
-            xmas: true
-            french-hens: 3
-            array-test: ["DFASf", "2222"]
-            calling-birds:
-                - huey
-                - dewey
-                - louie
-                - fred
-            test1: false
-            hello: "hello"
-            birds:
-                - huey-2
-                - dewey-2
-        "###;
+doe: "a deer, a female deer"
+ray: "a drop of golden sun"
+pi: 3.14159
+xmas: true
+french-hens: 3
+array-test: ["DFASf", "2222"]
+calling-birds:
+  - huey
+  - dewey
+  - louie
+  - fred
+test1: false
+birds:
+  - huey-2
+  - dewey-2
+str-folded-style: >
+  that is folded
+  into two lines
+  and it is not indented
+str-literal-style: |
+  this is my very very very
+  long string
+  that is folded
+"###;
         let actual = parse(input).unwrap();
 
         assert!(actual.contains_key("doe"));
@@ -150,13 +179,16 @@ mod tests {
         assert!(actual.contains_key("test1"));
         assert_eq!(actual.get("test1"), Some(&"false".to_string()));
 
-        assert!(actual.contains_key("hello"));
-        assert_eq!(actual.get("hello"), Some(&"hello".to_string()));
-
-        assert!(actual.contains_key("birds"));
+        assert!(actual.contains_key("str-folded-style"));
         assert_eq!(
-            actual.get("birds"),
-            Some(&"[\"huey-2\", \"dewey-2\"]".to_string())
+            actual.get("str-folded-style"),
+            Some(&"  that is folded  into two lines  and it is not indented\n".to_string())
+        );
+
+        assert!(actual.contains_key("str-literal-style"));
+        assert_eq!(
+            actual.get("str-literal-style"),
+            Some(&"  this is my very very very\n  long string\n  that is folded\n".to_string())
         );
     }
     #[test]

@@ -2,13 +2,15 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 pair = _{ string_key ~ ":" ~ value }
 pair_nested = { (pair)* }
-value = _{ array | array_multiline | string | number | boolean | null | pair_nested }
+value = _{ array | array_multiline | string | string_multiline_folded_style | string_multiline_literal_style | number | boolean | null | pair_nested }
 
 array = {
     "[" ~ "]" |
     "[" ~ value ~ ("," ~ value)* ~ "]"
 }
 array_multiline = { ("-" ~ (!("-" | pair) ~ string_key))+ }
+string_multiline_folded_style = { (">" ~ (!(">" | pair) ~ ASCII_ALPHANUMERIC)*) }
+string_multiline_literal_style = { ("|" ~ (!("|" | pair) ~ ASCII_ALPHANUMERIC)*) }
 boolean = { "true" | "false" }
 char_key = { ASCII_ALPHANUMERIC | "." | "_" | "/" | "-" }
 string_key = @{ char_key+ }
