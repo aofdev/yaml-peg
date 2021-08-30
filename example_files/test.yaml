@@ -10,7 +10,17 @@ calling-birds:
   - louie
   - fred
 test1: false
-hello: "hello"
 birds:
   - huey-2
   - dewey-2
+str-folded-style: >
+  that is folded
+  into two lines
+  and it is not indented
+  into three lines 
+str-literal-style: |
+  this is my very very very
+  long string
+  that is folded
+  into two lines
+  and it is not indented
